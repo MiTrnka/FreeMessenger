@@ -1,3 +1,4 @@
+using FreeMessenger.Api;
 
 namespace FreeMessenger.Api;
 
@@ -7,24 +8,42 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Add services to the container.
-        builder.Services.AddAuthorization();
+        // ---------------------------------
+        // KONFIGURACE SLUŽEB (SERVICES)
+        // ---------------------------------
 
-        // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-        builder.Services.AddOpenApi();
+        // Zaregistrujeme služby pro GraphQL server a øekneme mu,
+        // aby jako zdroj pro dotazy použil naši tøídu Query.
+        builder.Services
+            .AddGraphQLServer()
+            .AddQueryType<Query>();
+
+        // Pøidáme služby potøebné pro generování Swagger/OpenAPI dokumentace.
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
+
+        // ---------------------------------
+        // SESTAVENÍ APLIKACE A KONFIGURACE PIPELINE
+        // ---------------------------------
 
         var app = builder.Build();
 
-        // Configure the HTTP request pipeline.
+        // Namapujeme GraphQL endpoint na standardní adresu "/graphql".
+        // Tento pøíkaz také zpøístupní testovací prostøedí Banana Cake Pop.
+        app.MapGraphQL();
+
+        // Konfigurace HTTP pipeline.
         if (app.Environment.IsDevelopment())
         {
-            app.MapOpenApi();
+            // Pokud je aplikace ve vývojovém prostøedí, zapneme Swagger UI.
+            app.UseSwagger();
+            app.UseSwaggerUI();
         }
 
+        // Zapneme automatické pøesmìrování z HTTP na HTTPS.
         app.UseHttpsRedirection();
 
-        app.UseAuthorization();
-
+        // Spustíme aplikaci.
         app.Run();
     }
 }
